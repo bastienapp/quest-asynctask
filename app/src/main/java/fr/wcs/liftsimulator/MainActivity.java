@@ -1,5 +1,6 @@
 package fr.wcs.liftsimulator;
 
+import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -93,22 +94,38 @@ public class MainActivity extends AppCompatActivity {
     private void goToFloor(int floor) {
         if (!isLiftMoving && floor != currentFloor) {
             moveNextFloor(floor);
-            isLiftMoving = false;
         }
     }
 
     private void moveNextFloor(int floor) {
         if (floor != currentFloor) {
             isLiftMoving = true;
-            waitForIt();
-            currentFloor = (floor > currentFloor) ? currentFloor + 1 : currentFloor - 1;
-            TextView floorCount = (TextView) findViewById(R.id.floor_count);
-            floorCount.setText(String.valueOf(currentFloor));
-            moveNextFloor(floor);
+            MoveLift moveLift = new MoveLift();
+            moveLift.execute(floor);
         }
     }
 
-    private void waitForIt() {
-        SystemClock.sleep(3000);
+    private class MoveLift extends AsyncTask<Integer, Integer, Void>
+    {
+        private int floor = 0;
+
+        @Override
+        protected Void doInBackground(Integer... floors) {
+            this.floor = floors[0];
+            SystemClock.sleep(3000);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            currentFloor = (floor > currentFloor) ? currentFloor + 1 : currentFloor - 1;
+            TextView floorCount = (TextView) findViewById(R.id.floor_count);
+            floorCount.setText(String.valueOf(currentFloor));
+            if (floor != currentFloor) {
+                moveNextFloor(floor);
+            } else {
+                isLiftMoving = false;
+            }
+        }
     }
 }
